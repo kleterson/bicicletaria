@@ -171,19 +171,29 @@
         let currentBannerIndex = 0;
         let bannerInterval = null;
 
-        function loadStoreData() {
-            const saved = localStorage.getItem('mb_bicicletaria_db');
-            if (saved) {
-                try {
-                    db = JSON.parse(saved);
-                } catch(e) {}
+        // CARREGA DO DB.JSON NO RENDER OU DO LOCALSTORAGE
+        async function loadStoreData() {
+            try {
+                const response = await fetch('db.json');
+                if (response.ok) {
+                    const json = await response.json();
+                    db = json;
+                    localStorage.setItem('mb_bicicletaria_db', JSON.stringify(db));
+                }
+            } catch(e) {
+                const saved = localStorage.getItem('mb_bicicletaria_db');
+                if (saved) { try { db = JSON.parse(saved); } catch(err) {} }
             }
 
             if (!db.categories || !db.categories.length) {
                 db.categories = [{ id: "all", name: "Todas", icon: "fa-border-all" }];
             }
 
-            const storeName = db.store?.name || "MB Bicicletaria";
+            const storeName = db.store?.name || db.config?.name || "MB Bicicletaria";
+            const storePhone = db.store?.phone || db.config?.phone || "5513996107399";
+            
+            db.store = { name: storeName, phone: storePhone };
+
             document.getElementById('store-title-logo').innerText = storeName;
             document.getElementById('footer-store-name').innerText = storeName;
 
@@ -201,10 +211,6 @@
             loadStoreData();
             if (bannerInterval) clearInterval(bannerInterval);
             bannerInterval = setInterval(nextBanner, 5000);
-        });
-
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'mb_bicicletaria_db') { loadStoreData(); }
         });
 
         function renderDatePickerButtons() {
@@ -362,7 +368,6 @@
         function formatMoney(val) { return Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
         function addToCart(id) {
-            loadStoreData();
             const product = (db.products || []).find(p => p.id === id);
             if (!product) return;
             const existing = cart.find(i => i.id === id);
@@ -430,7 +435,6 @@
 
             if (!name || !phone || !address || !date) return alert('Preencha seu nome, telefone, endereço e selecione um dia disponível para entrega!');
 
-            loadStoreData();
             const total = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
             if (!db.orders) db.orders = [];
             db.orders.unshift({ id: Date.now().toString(), customer: name, phone, address, date, time, items: [...cart], total, createdAt: new Date().toLocaleString() });
