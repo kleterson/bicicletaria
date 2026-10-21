@@ -293,23 +293,30 @@
         function prevBanner() { if (!db.banners || !db.banners.length) return; currentBannerIndex = (currentBannerIndex - 1 + db.banners.length) % db.banners.length; renderBanners(); }
 
         function renderCategoryPills() {
-            document.getElementById('category-pills').innerHTML = (db.categories || []).map(cat => `
-                <button onclick="activeCategory='${cat.id}';renderCategoryPills();renderProducts()" class="px-4 py-2 rounded-xl text-xs font-bold transition border ${activeCategory === cat.id ? 'bg-orange-600 text-white border-orange-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'}">
-                    <i class="fa-solid ${cat.icon} mr-1.5"></i> ${cat.name}
-                </button>
-            `).join('');
+            document.getElementById('category-pills').innerHTML = (db.categories || []).map(cat => {
+                const isAll = cat.id === 'all' || cat.name.toLowerCase() === 'todas' || cat.name.toLowerCase() === 'todos';
+                const active = (activeCategory === 'all' && isAll) || activeCategory === cat.id;
+                
+                return `
+                    <button onclick="activeCategory='${isAll ? 'all' : cat.id}';renderCategoryPills();renderProducts()" class="px-4 py-2 rounded-xl text-xs font-bold transition border ${active ? 'bg-orange-600 text-white border-orange-500' : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'}">
+                        <i class="fa-solid ${cat.icon || 'fa-tag'} mr-1.5"></i> ${cat.name}
+                    </button>
+                `;
+            }).join('');
         }
 
         function renderProducts() {
             const grid = document.getElementById('products-grid');
-            const search = document.getElementById('search-input').value.toLowerCase();
-            const onlyPromo = document.getElementById('promo-filter').checked;
+            const search = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const onlyPromo = document.getElementById('promo-filter')?.checked || false;
             const products = db.products || [];
 
             let filtered = products.filter(p => {
-                return (activeCategory === 'all' || p.category === activeCategory) &&
-                       (p.name.toLowerCase().includes(search)) &&
-                       (!onlyPromo || p.isPromo);
+                const matchesCategory = (activeCategory === 'all') || (String(p.category) === String(activeCategory));
+                const matchesSearch = p.name.toLowerCase().includes(search);
+                const matchesPromo = !onlyPromo || (p.isPromo && p.promoPrice > 0);
+                
+                return matchesCategory && matchesSearch && matchesPromo;
             });
 
             document.getElementById('product-count').innerText = filtered.length;
