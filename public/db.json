@@ -37,6 +37,12 @@
       "title": "MB Biciletas ",
       "subtitle": "Todos os modelos ",
       "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGVf_kVmJNBrSDcyHeQ9aIoleR1GMJ37-nHTDjwTRPXw&s=10"
+    },
+    {
+      "id": "1792603576779",
+      "title": "Guidao para aro 29 fica mais linda",
+      "subtitle": "Corra nao perca o seu !",
+      "image": "https://a-static.mlcdn.com.br/470x352/guidao-bike-aro-29-26-elevado-alto-31-8-mm-720-mm-x-60mm-aluminio-absolute-guidon-bicicleta/nethbikes/4378/05655c7250296cd51d6bdb3987628809.jpeg"
     }
   ],
   "products": [
@@ -69,18 +75,22 @@
       "promoPrice": 0,
       "description": "peneu aro 29",
       "image": "https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcRwJ_O_1BjX3TRYlaF_geP2DFMgfr3XSv-gDlJrf4uQ_gLagrDe_LAzS5dNVDUnxneTDACmKOQzdoLfGBcGtBOLPo-gYJoUFJ-JvCqL2_fSA28_tFDd4Y1Ty8yM3PBbilnvlJyOfkcDhT4&usqp=CAc"
+    },
+    {
+      "id": "1792603535155",
+      "name": "guidao",
+      "price": 90,
+      "category": "cat-5",
+      "isPromo": true,
+      "promoPrice": 50,
+      "description": "Aproveite essa oferta relampago",
+      "image": "https://a-static.mlcdn.com.br/470x352/guidao-bike-aro-29-26-elevado-alto-31-8-mm-720-mm-x-60mm-aluminio-absolute-guidon-bicicleta/nethbikes/4378/05655c7250296cd51d6bdb3987628809.jpeg"
     }
   ],
   "orders": [],
-  "blockedDates": [
-    "2026-10-21",
-    "2026-10-22",
-    "2026-10-23",
-    "2026-10-24",
-    "2026-10-25"
-  ],
+  "blockedDates": [],
   "store": {
-    "name": "Bike Store",
-    "phone": "5513996735403"
+    "name": "MMB  Bicicletaria",
+    "phone": "5511920065761"
   }
 }
