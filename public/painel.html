@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin | MB Bicicletaria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { brand: { 500: '#f97316', 600: '#ea580c' } }, fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] } } }
+        }
+    </script>
+    <style>
+        body { background-color: #0b0f19; color: #f3f4f6; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="custom-scrollbar min-h-screen flex flex-col justify-between">
+
+    <header class="sticky top-0 z-40 glass-panel border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 rounded-xl bg-orange-600 flex items-center justify-center text-white text-2xl font-bold"><i class="fa-solid fa-sliders"></i></div>
+                <div><h1 class="text-lg font-bold text-white">Painel de Gestão</h1><p id="admin-header-store" class="text-xs text-orange-500">MB Bicicletaria</p></div>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition flex items-center gap-2"><i class="fa-solid fa-store text-orange-500"></i> Ver Loja</a>
+                <button onclick="exportDataDB()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition"><i class="fa-solid fa-download text-emerald-400 mr-1.5"></i> Exportar db.json</button>
+                <label class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer"><i class="fa-solid fa-upload text-blue-400 mr-1.5"></i> Importar db.json<input type="file" accept=".json" onchange="importDataDB(event)" class="hidden"></label>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 flex-grow">
+        <!-- CONFIGURAÇÕES DA LOJA -->
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <h3 class="text-base font-bold text-white"><i class="fa-solid fa-store text-orange-500 mr-2"></i> Configurações da Loja</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div><label class="block text-xs font-medium text-slate-400 mb-1">Nome da Loja</label><input type="text" id="admin-store-name" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500"></div>
+                <div><label class="block text-xs font-medium text-slate-400 mb-1">WhatsApp para Pedidos (Apenas números com DDD)</label><input type="text" id="admin-store-phone" placeholder="Ex: 5513996107399" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-orange-500"></div>
+            </div>
+            <button onclick="saveStoreConfig()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition">Salvar Configurações</button>
+        </div>
+
+        <div class="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto custom-scrollbar">
+            <button onclick="switchAdminTab('bikes')" id="tab-btn-bikes" class="px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white transition"><i class="fa-solid fa-bicycle mr-1.5"></i> Produtos</button>
+            <button onclick="switchAdminTab('categories')" id="tab-btn-categories" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 transition"><i class="fa-solid fa-layer-group mr-1.5"></i> Categorias</button>
+            <button onclick="switchAdminTab('banners')" id="tab-btn-banners" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 transition"><i class="fa-solid fa-images mr-1.5"></i> Banners</button>
+            <button onclick="switchAdminTab('dates')" id="tab-btn-dates" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 transition"><i class="fa-solid fa-calendar-xmark mr-1.5"></i> Bloquear Datas</button>
+            <button onclick="switchAdminTab('orders')" id="tab-btn-orders" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-slate-400 transition"><i class="fa-solid fa-calendar-check mr-1.5"></i> Pedidos</button>
+        </div>
+
+        <div id="admin-tab-bikes" class="space-y-6">
+            <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Bicicletas Cadastradas</h3><button onclick="openBikeModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-plus mr-1.5"></i> Nova Bicicleta</button></div>
+            <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-xs text-slate-400 uppercase border-b border-slate-800"><tr><th class="py-3 px-4">Imagem</th><th class="py-3 px-4">Nome</th><th class="py-3 px-4">Preço</th><th class="py-3 px-4 text-right">Ações</th></tr></thead>
+                    <tbody id="admin-bikes-table-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-tab-categories" class="space-y-6 hidden">
+            <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Gerenciar Categorias</h3><button onclick="openCategoryModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-plus mr-1.5"></i> Nova Categoria</button></div>
+            <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-900 text-xs text-slate-400 uppercase border-b border-slate-800"><tr><th class="py-3 px-4">Ícone</th><th class="py-3 px-4">Nome</th><th class="py-3 px-4 text-right">Ações</th></tr></thead>
+                    <tbody id="admin-categories-table-body" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="admin-tab-banners" class="space-y-6 hidden">
+            <div class="flex justify-between items-center"><h3 class="text-lg font-bold text-white">Banners Promocionais</h3><button onclick="openBannerModal()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-solid fa-plus mr-1.5"></i> Novo Banner</button></div>
+            <div id="admin-banners-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <div id="admin-tab-dates" class="space-y-6 hidden">
+            <div class="glass-panel p-6 rounded-2xl space-y-4">
+                <h3 class="text-base font-bold text-white"><i class="fa-solid fa-calendar-xmark text-orange-500 mr-2"></i> Bloquear Dias para Entrega</h3>
+                <div class="flex items-center gap-3">
+                    <input type="date" id="block-date-input" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm">
+                    <button onclick="addBlockedDate()" class="bg-orange-600 hover:bg-orange-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">Bloquear Data</button>
+                </div>
+            </div>
+            <div class="glass-panel rounded-2xl p-6 space-y-4">
+                <h4 class="text-sm font-bold text-white">Datas Bloqueadas:</h4>
+                <div id="blocked-dates-list" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+
+        <div id="admin-tab-orders" class="space-y-6 hidden">
+            <h3 class="text-lg font-bold text-white">Pedidos e Agendamentos</h3>
+            <div id="admin-orders-list" class="space-y-4"></div>
+        </div>
+    </main>
+
+    <!-- MODAIS ADMIN -->
+    <div id="modal-bike" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-3xl border border-slate-700 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-base font-bold text-white">Cadastrar Bicicleta</h3>
+            <form id="bike-form" onsubmit="handleBikeFormSubmit(event)" class="space-y-3 text-xs">
+                <div><label class="text-slate-400">Nome *</label><input type="text" id="bike-name" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="text-slate-400">Preço (R$) *</label><input type="number" step="0.01" id="bike-price" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                    <div><label class="text-slate-400">Categoria *</label><select id="bike-category" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></select></div>
+                </div>
+                <div><label class="inline-flex items-center"><input type="checkbox" id="bike-is-promo" onchange="document.getElementById('promo-box').classList.toggle('hidden', !this.checked)" class="mr-2"> <span class="text-orange-400 font-bold">Ativar Promoção</span></label></div>
+                <div id="promo-box" class="hidden"><label class="text-slate-400">Preço Promocional (R$)</label><input type="number" step="0.01" id="bike-promo-price" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                <div><label class="text-slate-400">Descrição</label><textarea id="bike-description" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></textarea></div>
+                <div><label class="text-slate-400">Foto (URL ou Ficheiro)</label>
+                    <div class="flex gap-4 my-1"><label><input type="radio" name="bike-img-type" value="url" checked onchange="toggleImg('bike', 'url')"> URL</label><label><input type="radio" name="bike-img-type" value="file" onchange="toggleImg('bike', 'file')"> Ficheiro</label></div>
+                    <input type="url" id="bike-img-url" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white">
+                    <input type="file" id="bike-img-file" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-white hidden">
+                </div>
+                <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="document.getElementById('modal-bike').classList.add('hidden')" class="px-4 py-2 bg-slate-800 rounded-xl">Cancelar</button><button type="submit" class="px-4 py-2 bg-orange-600 font-bold rounded-xl text-white">Salvar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-category" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-3xl border border-slate-700 p-6 space-y-4">
+            <h3 class="text-base font-bold text-white">Nova Categoria</h3>
+            <form onsubmit="handleCategoryFormSubmit(event)" class="space-y-3 text-xs">
+                <div><label class="text-slate-400">Nome *</label><input type="text" id="category-name" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                <div><label class="text-slate-400">Ícone FontAwesome *</label><input type="text" id="category-icon" required placeholder="fa-bicycle" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="document.getElementById('modal-category').classList.add('hidden')" class="px-4 py-2 bg-slate-800 rounded-xl">Cancelar</button><button type="submit" class="px-4 py-2 bg-orange-600 font-bold rounded-xl text-white">Salvar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-banner" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-md rounded-3xl border border-slate-700 p-6 space-y-4">
+            <h3 class="text-base font-bold text-white">Novo Banner</h3>
+            <form onsubmit="handleBannerFormSubmit(event)" class="space-y-3 text-xs">
+                <div><label class="text-slate-400">Título *</label><input type="text" id="banner-title" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                <div><label class="text-slate-400">Subtítulo *</label><input type="text" id="banner-subtitle" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white"></div>
+                <div><label class="text-slate-400">Foto (URL ou Ficheiro)</label>
+                    <div class="flex gap-4 my-1"><label><input type="radio" name="banner-img-type" value="url" checked onchange="toggleImg('banner', 'url')"> URL</label><label><input type="radio" name="banner-img-type" value="file" onchange="toggleImg('banner', 'file')"> Ficheiro</label></div>
+                    <input type="url" id="banner-img-url" placeholder="https://..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white">
+                    <input type="file" id="banner-img-file" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-white hidden">
+                </div>
+                <div class="flex justify-end gap-2 pt-2"><button type="button" onclick="document.getElementById('modal-banner').classList.add('hidden')" class="px-4 py-2 bg-slate-800 rounded-xl">Cancelar</button><button type="submit" class="px-4 py-2 bg-orange-600 font-bold rounded-xl text-white">Salvar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let db = {
+            store: { name: "MB Bicicletaria", phone: "5513996107399" },
+            categories: [{ id: "mountain-bike", name: "Mountain Bike", icon: "fa-mountain" }],
+            banners: [], products: [], orders: [], blockedDates: []
+        };
+
+        function loadDB() {
+            const saved = localStorage.getItem('mb_bicicletaria_db');
+            if (saved) {
+                try {
+                    db = JSON.parse(saved);
+                } catch(e) {}
+            }
+            if (!db.store) db.store = { name: "MB Bicicletaria", phone: "5513996107399" };
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDB();
+            document.getElementById('admin-store-name').value = db.store.name || "";
+            document.getElementById('admin-store-phone').value = db.store.phone || "";
+            document.getElementById('admin-header-store').innerText = db.store.name || "MB Bicicletaria";
+            renderAdminTables();
+        });
+
+        function saveDB() {
+            localStorage.setItem('mb_bicicletaria_db', JSON.stringify(db));
+        }
+
+        function saveStoreConfig() {
+            loadDB();
+            const newName = document.getElementById('admin-store-name').value.trim();
+            const newPhone = document.getElementById('admin-store-phone').value.trim();
+
+            if (!newName || !newPhone) {
+                return alert("Preencha o nome da loja e o número do WhatsApp!");
+            }
+
+            db.store = { name: newName, phone: newPhone };
+            saveDB();
+            document.getElementById('admin-header-store').innerText = db.store.name;
+            alert('Configurações salvas! Nome e WhatsApp atualizados.');
+        }
+
+        function switchAdminTab(tab) {
+            ['bikes', 'categories', 'banners', 'dates', 'orders'].forEach(t => {
+                document.getElementById(`admin-tab-${t}`).classList.add('hidden');
+                document.getElementById(`tab-btn-${t}`).classList.remove('bg-orange-600', 'text-white');
+                document.getElementById(`tab-btn-${t}`).classList.add('bg-slate-800', 'text-slate-400');
+            });
+            document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-btn-${tab}`).classList.add('bg-orange-600', 'text-white');
+            document.getElementById(`tab-btn-${tab}`).classList.remove('bg-slate-800', 'text-slate-400');
+            renderAdminTables();
+        }
+
+        function renderAdminTables() {
+            loadDB();
+            document.getElementById('admin-bikes-table-body').innerHTML = (db.products || []).map(p => `
+                <tr>
+                    <td class="py-3 px-4"><img src="${p.image}" class="w-10 h-10 rounded-lg object-cover"></td>
+                    <td class="py-3 px-4 font-bold text-white">${p.name}</td>
+                    <td class="py-3 px-4">R$ ${Number(p.price).toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                    <td class="py-3 px-4 text-right"><button onclick="deleteBike('${p.id}')" class="text-red-400 hover:text-red-300"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('') || `<tr><td colspan="4" class="py-4 text-center text-slate-500">Nenhum produto.</td></tr>`;
+
+            document.getElementById('admin-categories-table-body').innerHTML = (db.categories || []).map((c, idx) => `
+                <tr>
+                    <td class="py-3 px-4"><i class="fa-solid ${c.icon} text-orange-500"></i></td>
+                    <td class="py-3 px-4 font-bold text-white">${c.name}</td>
+                    <td class="py-3 px-4 text-right">${c.id !== 'all' ? `<button onclick="db.categories.splice(${idx},1);saveDB();renderAdminTables()" class="text-red-400"><i class="fa-solid fa-trash"></i></button>` : ''}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('admin-banners-list').innerHTML = (db.banners || []).map((b, idx) => `
+                <div class="glass-panel p-4 rounded-xl flex items-center justify-between border border-slate-800">
+                    <div class="flex items-center gap-3"><img src="${b.image}" class="w-16 h-10 rounded object-cover"><div><h4 class="text-xs font-bold text-white">${b.title}</h4><p class="text-[10px] text-slate-400">${b.subtitle}</p></div></div>
+                    <button onclick="db.banners.splice(${idx},1);saveDB();renderAdminTables()" class="text-red-400"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('') || `<p class="text-slate-500 text-xs">Nenhum banner cadastrado.</p>`;
+
+            const datesList = document.getElementById('blocked-dates-list');
+            if (!db.blockedDates || db.blockedDates.length === 0) {
+                datesList.innerHTML = `<span class="text-xs text-slate-500">Nenhuma data bloqueada.</span>`;
+            } else {
+                datesList.innerHTML = db.blockedDates.map((d, idx) => `
+                    <span class="inline-flex items-center gap-2 bg-red-950/60 border border-red-500/30 text-red-300 px-3 py-1.5 rounded-xl text-xs font-bold">
+                        <i class="fa-solid fa-calendar-xmark"></i> ${d.split('-').reverse().join('/')}
+                        <button onclick="removeBlockedDate(${idx})" class="text-red-400 hover:text-white ml-1"><i class="fa-solid fa-xmark"></i></button>
+                    </span>
+                `).join('');
+            }
+
+            document.getElementById('admin-orders-list').innerHTML = (db.orders || []).length ? db.orders.map((o, idx) => `
+                <div class="glass-panel p-4 rounded-xl space-y-2 border border-slate-800 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold text-white text-xs">${o.customer} (${o.phone}) - <span class="text-emerald-400">R$ ${Number(o.total).toLocaleString('pt-BR', {minimumFractionDigits:2})}</span></div>
+                        <p class="text-xs text-slate-400">Entrega: ${o.date.split('-').reverse().join('/')} (${o.time}) - ${o.address}</p>
+                    </div>
+                    <button onclick="deleteOrderWithPassword(${idx})" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-2 rounded-xl text-xs transition"><i class="fa-solid fa-trash mr-1"></i> Apagar</button>
+                </div>
+            `).join('') : '<p class="text-slate-500 text-xs">Nenhum pedido recebido.</p>';
+        }
+
+        function deleteOrderWithPassword(idx) {
+            const pass = prompt("Digite a senha de segurança (2332) para apagar este pedido:");
+            if (pass === "2332") {
+                db.orders.splice(idx, 1);
+                saveDB();
+                renderAdminTables();
+                alert("Pedido apagado com sucesso!");
+            } else if (pass !== null) {
+                alert("Senha incorreta!");
+            }
+        }
+
+        function addBlockedDate() {
+            const val = document.getElementById('block-date-input').value;
+            if (!val) return alert('Selecione uma data!');
+            if (!db.blockedDates) db.blockedDates = [];
+            if (!db.blockedDates.includes(val)) {
+                db.blockedDates.push(val);
+                saveDB();
+                renderAdminTables();
+                alert('Data bloqueada!');
+            } else { alert('Esta data já está bloqueada.'); }
+        }
+
+        function removeBlockedDate(idx) {
+            db.blockedDates.splice(idx, 1);
+            saveDB();
+            renderAdminTables();
+        }
+
+        function openBikeModal() {
+            document.getElementById('bike-form').reset();
+            document.getElementById('bike-category').innerHTML = (db.categories || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            document.getElementById('modal-bike').classList.remove('hidden');
+        }
+
+        async function handleBikeFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('bike-name').value.trim();
+            const price = parseFloat(document.getElementById('bike-price').value);
+            const category = document.getElementById('bike-category').value;
+            const isPromo = document.getElementById('bike-is-promo').checked;
+            const promoPrice = isPromo ? parseFloat(document.getElementById('bike-promo-price').value || 0) : 0;
+            const description = document.getElementById('bike-description').value.trim();
+
+            let image = '';
+            const type = document.querySelector('input[name="bike-img-type"]:checked').value;
+            if (type === 'url') image = document.getElementById('bike-img-url').value.trim();
+            else image = await toBase64(document.getElementById('bike-img-file').files[0]);
+
+            if (!db.products) db.products = [];
+            db.products.push({ id: Date.now().toString(), name, price, category, isPromo, promoPrice, description, image });
+            saveDB();
+            document.getElementById('modal-bike').classList.add('hidden');
+            renderAdminTables();
+        }
+
+        function openCategoryModal() { document.getElementById('modal-category').classList.remove('hidden'); }
+        function handleCategoryFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('category-name').value.trim();
+            const icon = document.getElementById('category-icon').value.trim();
+            const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            if (!db.categories) db.categories = [];
+            db.categories.push({ id, name, icon });
+            saveDB();
+            document.getElementById('modal-category').classList.add('hidden');
+            renderAdminTables();
+        }
+
+        function openBannerModal() { document.getElementById('modal-banner').classList.remove('hidden'); }
+        async function handleBannerFormSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('banner-title').value.trim();
+            const subtitle = document.getElementById('banner-subtitle').value.trim();
+            let image = '';
+            const type = document.querySelector('input[name="banner-img-type"]:checked').value;
+            if (type === 'url') image = document.getElementById('banner-img-url').value.trim();
+            else image = await toBase64(document.getElementById('banner-img-file').files[0]);
+
+            if (!db.banners) db.banners = [];
+            db.banners.push({ id: Date.now().toString(), title, subtitle, image });
+            saveDB();
+            document.getElementById('modal-banner').classList.add('hidden');
+            renderAdminTables();
+        }
+
+        function deleteBike(id) { db.products = db.products.filter(p => p.id !== id); saveDB(); renderAdminTables(); }
+        function toggleImg(ctx, type) {
+            document.getElementById(`${ctx}-img-url`).classList.toggle('hidden', type !== 'url');
+            document.getElementById(`${ctx}-img-file`).classList.toggle('hidden', type !== 'file');
+        }
+        function toBase64(file) {
+            return new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => res(reader.result);
+                reader.onerror = err => rej(err);
+            });
+        }
+        function exportDataDB() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const a = document.createElement('a'); a.href = dataStr; a.download = "db.json"; a.click();
+        }
+        function importDataDB(e) {
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try { db = JSON.parse(ev.target.result); saveDB(); renderAdminTables(); alert('Importado com sucesso!'); } catch(err) { alert('Erro.'); }
+            };
+            reader.readAsText(e.target.files[0]);
+        }
+    </script>
+</body>
+</html>
