@@ -171,18 +171,17 @@
         let currentBannerIndex = 0;
         let bannerInterval = null;
 
-        // CARREGA DO DB.JSON NO RENDER OU DO LOCALSTORAGE
+        // CARREGA DIRETAMENTE DO DB.JSON SEM USAR LOCALSTORAGE PARA OS DADOS DA LOJA
         async function loadStoreData() {
             try {
                 const response = await fetch('/db.json?v=' + Date.now());
                 if (response.ok) {
-                    const json = await response.json();
-                    db = json;
-                    localStorage.setItem('mb_bicicletaria_db', JSON.stringify(db));
+                    db = await response.json();
+                } else {
+                    console.error('Erro ao carregar o db.json');
                 }
             } catch(e) {
-                const saved = localStorage.getItem('mb_bicicletaria_db');
-                if (saved) { try { db = JSON.parse(saved); } catch(err) {} }
+                console.error('Falha na requisição do db.json:', e);
             }
 
             if (!db.categories || !db.categories.length) {
@@ -443,10 +442,6 @@
             if (!name || !phone || !address || !date) return alert('Preencha seu nome, telefone, endereço e selecione um dia disponível para entrega!');
 
             const total = cart.reduce((s, i) => s + (i.price * i.quantity), 0);
-            if (!db.orders) db.orders = [];
-            db.orders.unshift({ id: Date.now().toString(), customer: name, phone, address, date, time, items: [...cart], total, createdAt: new Date().toLocaleString() });
-            localStorage.setItem('mb_bicicletaria_db', JSON.stringify(db));
-
             let msg = `*NOVO PEDIDO - ${db.store?.name || 'MB Bicicletaria'}*\n\n`;
             msg += `*Cliente:* ${name}\n*Telefone:* ${phone}\n*Endereço:* ${address}\n`;
             msg += `📅 *Entrega:* ${date.split('-').reverse().join('/')} (${time})\n\n*ITENS:*\n`;
