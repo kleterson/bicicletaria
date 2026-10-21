@@ -174,7 +174,7 @@
         // CARREGA DO DB.JSON NO RENDER OU DO LOCALSTORAGE
         async function loadStoreData() {
             try {
-                const response = await fetch('db.json');
+                const response = await fetch('/db.json?v=' + Date.now());
                 if (response.ok) {
                     const json = await response.json();
                     db = json;
